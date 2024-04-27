@@ -12,6 +12,12 @@ const trajetSchema = new mongoose.Schema({
     },
     tempsArrivee: {
         type: String,
+    },
+    Type: {
+        type: String,
+    },
+    prix: {
+        type: Number,
     }
 }, {
     timestamps: true

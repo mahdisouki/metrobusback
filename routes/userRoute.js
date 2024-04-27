@@ -3,9 +3,11 @@ const userCtrl = require('../controllers/userCtrl')
 
 router.post('/register', userCtrl.register)
 router.post('/login', userCtrl.login)
-router.put('/updateUser/:id', userCtrl.UpdateUser)
+router.post('/loginAdmin', userCtrl.loginAdmin)
+router.post('/logout', userCtrl.logout)
 
-//router.post('/logout', userCtrl.logout)
+router.put('/updateUser/:id', userCtrl.UpdateUser)
+router.delete('/deleteuser/:id', userCtrl.deleteUser);
 router.get('/getAllUsers', userCtrl.getAll);
 
 

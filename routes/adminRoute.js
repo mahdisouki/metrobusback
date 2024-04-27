@@ -1,12 +1,12 @@
 const router = require("express").Router()
-const userCtrl = require('../controllers/adminCtrl')
+const adminCtrl = require("../controllers/adminCtrl")
 
-router.post('/register', userCtrl.register)
-router.post('/login', userCtrl.login)
-router.put('/updateUser/:id', userCtrl.UpdateUser)
+router.post('/register', adminCtrl.register)
+router.post('/login', adminCtrl.login)
+router.put('/updateUser/:id', adminCtrl.UpdateUser)
 
-router.post('/logout', userCtrl.logout)
-router.get('/getAllUsers', userCtrl.getAll);
+router.post('/logout', adminCtrl.logout)
+router.get('/getAllUsers', adminCtrl.getAll);
 
 
 

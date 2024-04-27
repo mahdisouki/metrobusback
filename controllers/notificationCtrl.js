@@ -24,8 +24,8 @@ const notificationCtrl = {
     },
     getAllNotification: async (req, res) => {
         try {
-            const trajet = await Notification.find();
-            res.status(200).json(Notification);
+            const notifications = await Notification.find();
+            res.status(200).json(notifications);
         } catch (error) {
             res.status(500).json({ message: error.message });
         }

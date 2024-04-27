@@ -3,8 +3,8 @@ const Trajet = require('../models/Trajet.model');
 const trajetCtrl = {
     createTrajet: async (req, res) => {
         try {
-            const { depart, arrivee, tempsDepart, tempsArrivee } = req.body;
-            const newTrajet = new Trajet({ depart, arrivee, tempsDepart, tempsArrivee });
+            const { depart, arrivee, tempsDepart, tempsArrivee, Type, prix } = req.body;
+            const newTrajet = new Trajet({ depart, arrivee, tempsDepart, tempsArrivee, Type, prix });
             await newTrajet.save();
             res.status(201).json(newTrajet);
         } catch (error) {

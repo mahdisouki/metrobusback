@@ -4,7 +4,8 @@ const bodyParser = require('body-parser');
 const adminRoute = require('./routes/adminRoute');
 const userRoute = require('./routes/userRoute');
 const trajetRoutes = require('./routes/trajetRoute');
-const notificationRoutes = require('./routes/notificationRoute'); // Assurez-vous que le chemin est correct
+const notificationRoutes = require('./routes/notificationRoute');
+const stationRoutes = require('./routes/stationRoute') // Assurez-vous que le chemin est correct
 
 
 require('dotenv').config();
@@ -26,10 +27,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());           // Note: bodyParser.json() is somewhat redundant with express.json()
 
 // Define routes
-app.use('/admin', adminRoute);
+//app.use('/admin', adminRoute);
 app.use('/trajet', trajetRoutes);
 app.use('/notification', notificationRoutes);
 app.use('/user', userRoute)
+app.use('/station', stationRoutes);
+
 // Database connection setup (ensure this does what's expected)
 require('./db/cnx');
 
