@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken')
 const userCtrl = {
   register: async (req, res) => {
     try {
-      const { name, lastName, email, password, photo, role } = req.body;
+      const { name, lastName, email, password, photo } = req.body;
       const user = await users.findOne({ email })
       if (user)
         return res.status(400).json({ msg: 'the email already exists.' })
@@ -17,7 +17,7 @@ const userCtrl = {
       //password encryption
       const passwordHash = await bcrypt.hash(password, 10)
       const newUser = new users({
-        name, lastName, photo, email, role, password: passwordHash
+        name, lastName, photo, email, password: passwordHash
       })
       await newUser.save();
 
@@ -67,21 +67,41 @@ const userCtrl = {
   loginAdmin: async (req, res) => {
     try {
       const { email, password } = req.body;
+      const user = await users.findOne({ email });
+      if (!user) {
+        return res.status(400).json({ msg: 'User does not exist.' });
+      }
+      if (user.role !== "admin") { // Assurez-vous que le rôle est strictement 'admin'
+        return res.status(403).json({ msg: 'Access denied: You are not an administrator.' });
+      }
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ msg: 'Incorrect password' });
+      }
 
-      const user = await users.findOne({ email })
-      if (!user) return res.status(400).json({ msg: 'user does not exist.' })
-      if (!user.role === "admin") return res.status(400).json({ msg: 'Access denied , you are admin' });
-      const isMatch = await bcrypt.compare(password, user.password)
-      if (!isMatch) return res.status(400).json({ msg: 'Incorrect password' })
-
-      const accesstoken = createAccessToken({ id: user._id })
-      const refreshtoken = createRefreshToken({ id: user._id })
-      res.json({ accesstoken })
+      const accesstoken = createAccessToken({ id: user._id });
+      const refreshtoken = createRefreshToken({ id: user._id });
+      res.json({ accesstoken, role: user.role }); // Inclure le rôle dans la réponse pour validation ultérieure si nécessaire
 
     } catch (error) {
-      return res.status(500).json({ msg: error.message })
+      return res.status(500).json({ msg: error.message });
     }
   },
+
+  UpdateAdmin: async (req, res) => {
+    try {
+      const { name, lastName, email, password } = req.body;
+      let update = { name, lastName, email };
+      if (password) {
+        update.password = await bcrypt.hash(password, 10);
+      }
+      await users.findOneAndUpdate({ _id: req.params.id }, update);
+      res.json({ msg: "User updated" });
+    } catch (error) {
+      res.status(500).json({ msg: error.message });
+    }
+  },
+
   UpdateUser: async (req, res) => {
     try {
       const passhash = null;
@@ -110,11 +130,12 @@ const userCtrl = {
 
   getAll: async (req, res) => {
     try {
-      const allUsers = await users.find();
+      const { role } = req.query;
+      const query = role ? { role } : {};
+      const allUsers = await users.find(query);
       res.json(allUsers);
     } catch (error) {
-      return res.status(500).json({ message: error.message })
-
+      return res.status(500).json({ message: error.message });
     }
   }
 }

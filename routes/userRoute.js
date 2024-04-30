@@ -7,6 +7,8 @@ router.post('/loginAdmin', userCtrl.loginAdmin)
 router.post('/logout', userCtrl.logout)
 
 router.put('/updateUser/:id', userCtrl.UpdateUser)
+router.put('/updateAdmin/:id', userCtrl.UpdateAdmin)
+
 router.delete('/deleteuser/:id', userCtrl.deleteUser);
 router.get('/getAllUsers', userCtrl.getAll);
 

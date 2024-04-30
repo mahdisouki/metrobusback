@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const adminRoute = require('./routes/adminRoute');
 const userRoute = require('./routes/userRoute');
 const trajetRoutes = require('./routes/trajetRoute');
 const notificationRoutes = require('./routes/notificationRoute');
@@ -27,7 +26,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());           // Note: bodyParser.json() is somewhat redundant with express.json()
 
 // Define routes
-//app.use('/admin', adminRoute);
 app.use('/trajet', trajetRoutes);
 app.use('/notification', notificationRoutes);
 app.use('/user', userRoute)

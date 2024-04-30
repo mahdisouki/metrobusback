@@ -11,6 +11,25 @@ const trajetCtrl = {
             res.status(400).json({ message: error.message });
         }
     },
+    updateTrajet: async (req, res) => {
+        const { id } = req.params;
+        const { depart, arrivee, tempsDepart, tempsArrivee, Type, prix } = req.body;
+
+        try {
+            const updatedTrajet = await Trajet.findByIdAndUpdate(id, {
+                depart, arrivee, tempsDepart, tempsArrivee, Type, prix
+            }, { new: true, runValidators: true });
+
+            if (!updatedTrajet) {
+                return res.status(404).json({ msg: "Trajet not found" });
+            }
+
+            res.json({ msg: "Trajet updated successfully", trajet: updatedTrajet });
+        } catch (error) {
+            console.error('Error updating trajet:', error);
+        }
+    },
+
     deleteTrajet: async (req, res) => {
         try {
             const result = await Trajet.findByIdAndDelete(req.params.id);
