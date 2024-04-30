@@ -43,7 +43,9 @@ const userCtrl = {
 
       const user = await users.findOne({ email })
       if (!user) return res.status(400).json({ msg: 'user does not exist.' })
-
+      if (user.role !== "user") {
+        return res.status(403).json({ msg: 'inccorect information.' });
+      }
       const isMatch = await bcrypt.compare(password, user.password)
       if (!isMatch) return res.status(400).json({ msg: 'Incorrect password' })
 

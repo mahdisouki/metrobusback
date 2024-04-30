@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const userRoute = require('./routes/userRoute');
 const trajetRoutes = require('./routes/trajetRoute');
 const notificationRoutes = require('./routes/notificationRoute');
-const stationRoutes = require('./routes/stationRoute') // Assurez-vous que le chemin est correct
+const stationRoutes = require('./routes/stationRoute')
 
 
 require('dotenv').config();
