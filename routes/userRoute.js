@@ -1,17 +1,17 @@
 const router = require("express").Router()
 const userCtrl = require('../controllers/userCtrl')
-
+const auth = require('../auth/auth')
+const authAdmin = require('../auth/authAdmin')
 router.post('/register', userCtrl.register)
 router.post('/login', userCtrl.login)
 router.post('/loginAdmin', userCtrl.loginAdmin)
-router.post('/logout', userCtrl.logout)
 
-router.put('/updateUser/:id', userCtrl.UpdateUser)
-router.put('/updateAdmin/:id', userCtrl.UpdateAdmin)
+router.put('/updateUser', auth, userCtrl.UpdateUser)
+router.put('/updateAdmin', auth, authAdmin, userCtrl.UpdateAdmin)
 
-router.delete('/deleteuser/:id', userCtrl.deleteUser);
-router.get('/getAllUsers', userCtrl.getAll);
-
+router.delete('/deleteuser/:id', auth, authAdmin, userCtrl.deleteUser);
+router.get('/getAllUsers', auth, authAdmin, userCtrl.getAll);
+router.get('/getStatsCards', userCtrl.getStatCards)
 
 
 module.exports = router

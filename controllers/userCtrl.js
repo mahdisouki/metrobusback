@@ -1,4 +1,6 @@
 const users = require("../models/User.model")
+const tickets = require('../models/Ticket.model')
+const avis = require('../models/rating-avis.model')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
@@ -22,13 +24,7 @@ const userCtrl = {
       await newUser.save();
 
       const accesstoken = createAccessToken({ id: newUser._id });
-      const refreshtoken = createRefreshToken({ id: newUser._id });
 
-      res.cookie('refreshtoken', refreshtoken, {
-        httpOnly: true,
-        path: '/user/refresh_token',
-        maxAge: 7 * 24 * 60 * 60 * 1000
-      });
       res.json({ accesstoken });
 
       //  res.json({msg : 'Register Success'})
@@ -57,14 +53,7 @@ const userCtrl = {
       return res.status(500).json({ msg: error.message })
     }
   },
-  logout: async (req, res) => {
-    try {
-      res.cookie('refreshtoken', '', { expires: new Date(0) });
-      res.status(200).json({ msg: "Logged out successfully." });
-    } catch (error) {
-      res.status(500).json({ msg: error.message });
-    }
-  },
+
 
   loginAdmin: async (req, res) => {
     try {
@@ -73,7 +62,7 @@ const userCtrl = {
       if (!user) {
         return res.status(400).json({ msg: 'User does not exist.' });
       }
-      if (user.role !== "admin") { // Assurez-vous que le rôle est strictement 'admin'
+      if (user.role !== "admin") {
         return res.status(403).json({ msg: 'Access denied: You are not an administrator.' });
       }
       const isMatch = await bcrypt.compare(password, user.password);
@@ -83,7 +72,7 @@ const userCtrl = {
 
       const accesstoken = createAccessToken({ id: user._id });
       const refreshtoken = createRefreshToken({ id: user._id });
-      res.json({ accesstoken, role: user.role }); // Inclure le rôle dans la réponse pour validation ultérieure si nécessaire
+      res.json({ accesstoken, role: user.role });
 
     } catch (error) {
       return res.status(500).json({ msg: error.message });
@@ -94,10 +83,11 @@ const userCtrl = {
     try {
       const { name, lastName, email, password } = req.body;
       let update = { name, lastName, email };
-      if (password) {
+      if (password != "") {
         update.password = await bcrypt.hash(password, 10);
       }
-      await users.findOneAndUpdate({ _id: req.params.id }, update);
+      console.log(update, password)
+      await users.findOneAndUpdate({ _id: req.user.id }, update);
       res.json({ msg: "User updated" });
     } catch (error) {
       res.status(500).json({ msg: error.message });
@@ -111,7 +101,7 @@ const userCtrl = {
       if (password) {
         passhash = await bcrypt.hash(password, 10);
       }
-      await users.findOneAndUpdate(({ _id: req.params.id }, { name, lastName, email, passhash, photo }))
+      await users.findOneAndUpdate(({ _id: req.user.id }, { name, lastName, email, passhash, photo }))
       res.json({ msg: "updated user" })
 
     } catch (error) {
@@ -139,13 +129,23 @@ const userCtrl = {
     } catch (error) {
       return res.status(500).json({ message: error.message });
     }
+  },
+  getStatCards: async (req, res) => {
+    try {
+      const user = await users.find();
+      const ticket = await tickets.find();
+      const aviss = await avis.find();
+      res.json({ users: user.length, tickets: ticket.length, avis: aviss.length })
+    } catch (error) {
+      res.status(500).json(error)
+    }
   }
 }
 const createAccessToken = (user) => {
-  return jwt.sign(user, "metrobus123", { expiresIn: '11m' })
+  return jwt.sign(user, "metrobus123", { expiresIn: '365d' })
 }
 const createRefreshToken = (user) => {
-  return jwt.sign(user, "metrobus123", { expiresIn: '7d' })
+  return jwt.sign(user, "metrobus123", { expiresIn: '365d' })
 }
 
 

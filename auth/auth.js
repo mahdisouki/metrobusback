@@ -6,7 +6,7 @@ const auth = (req, res, next) => {
         if (!token) return res.status(400).json({ msg: 'Invalid Authentication' });
 
         jwt.verify(token, "metrobus123", (error, user) => {
-            if (error) return res.status(400).json({ msg: 'Invalid Authentication2' });
+            if (error) return res.status(400).json({ msg: error });
             req.user = user;
             next();
         });

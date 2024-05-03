@@ -4,6 +4,10 @@ const trajetCtrl = {
     createTrajet: async (req, res) => {
         try {
             const { depart, arrivee, tempsDepart, tempsArrivee, Type, prix } = req.body;
+
+            const trajet = await Trajet.findOne({ depart: depart, arrivee: arrivee, tempsArrivee: tempsArrivee, tempsDepart: tempsDepart, Type: Type })
+
+            if (trajet) return res.status(400).json({ msg: "le trajet est déjà existé" });
             const newTrajet = new Trajet({ depart, arrivee, tempsDepart, tempsArrivee, Type, prix });
             await newTrajet.save();
             res.status(201).json(newTrajet);

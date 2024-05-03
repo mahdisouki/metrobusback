@@ -30,5 +30,23 @@ const notificationCtrl = {
             res.status(500).json({ message: error.message });
         }
     },
+    updateNotify: async (req, res) => {
+        const { id } = req.params;
+        const { title, message } = req.body;
+
+        try {
+            const updateNotify = await Notification.findByIdAndUpdate(id, {
+                title, message
+            }, { new: true, runValidators: true });
+
+            if (!updateNotify) {
+                return res.status(404).json({ msg: "Notification not found" });
+            }
+
+            res.json({ msg: "Notification updated successfully", notification: updateNotify });
+        } catch (error) {
+            console.error('Error updating Notification:', error);
+        }
+    },
 };
 module.exports = notificationCtrl;
