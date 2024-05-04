@@ -12,6 +12,7 @@ router.put('/updateAdmin', auth, authAdmin, userCtrl.UpdateAdmin)
 router.delete('/deleteuser/:id', auth, authAdmin, userCtrl.deleteUser);
 router.get('/getAllUsers', auth, authAdmin, userCtrl.getAll);
 router.get('/getStatsCards', userCtrl.getStatCards)
+router.get('/userDataByMonth', userCtrl.getUserDataByMonth);
 
 
 module.exports = router

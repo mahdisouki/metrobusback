@@ -139,7 +139,26 @@ const userCtrl = {
     } catch (error) {
       res.status(500).json(error)
     }
+  },
+  getUserDataByMonth: async (req, res) => {
+    try {
+      const userData = await users.aggregate([
+        {
+          $group: {
+            _id: { $month: "$createdAt" }, // Group by month of the 'createdAt' field
+            numberOfUsers: { $sum: 1 }    // Count users
+          }
+        },
+        {
+          $sort: { "_id": 1 } // Sort by month
+        }
+      ]);
+      res.json(userData);
+    } catch (error) {
+      res.status(500).send({ message: "Error retrieving user data by month", error: error.message });
+    }
   }
+
 }
 const createAccessToken = (user) => {
   return jwt.sign(user, "metrobus123", { expiresIn: '365d' })
