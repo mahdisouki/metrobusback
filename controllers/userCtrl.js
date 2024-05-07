@@ -148,11 +148,11 @@ const userCtrl = {
   getUserDataByMonth: async (req, res) => {
     try {
       const currentYear = new Date().getFullYear(); // Get the current year
-  
+
       const months = Array.from({ length: 12 }, (_, i) => {
         return { month: i + 1 }; // Generate an array of objects representing each month
       });
-  
+
       const userData = await users.aggregate([
         {
           $match: {
@@ -166,7 +166,7 @@ const userCtrl = {
           }
         }
       ]);
-  
+
       // Left join the aggregated data with the array of months
       const result = months.map(monthObj => {
         const monthInfo = userData.find(item => item._id === monthObj.month);
@@ -176,13 +176,13 @@ const userCtrl = {
           numberOfUsers: monthInfo ? monthInfo.numberOfUsers : 0
         };
       });
-  
+
       res.json(result);
     } catch (error) {
       res.status(500).json({ message: "Error retrieving user data by month", error: error.message });
     }
   },
-  getUserSatisfaction :async (req,res)=>{
+  getUserSatisfaction: async (req, res) => {
     try {
       // Count the number of satisfied and dissatisfied users based on the ratings
       const userSatisfactionData = await avis.aggregate([
@@ -194,16 +194,16 @@ const userCtrl = {
           }
         }
       ]);
-  
+
       // Extract the results from the aggregation output
       const userSatisfaction = userSatisfactionData[0] || { satisfiedUsers: 0, dissatisfiedUsers: 0 };
-  
+
       res.json(userSatisfaction);
     } catch (error) {
       res.status(500).json({ message: "Error retrieving user satisfaction data", error: error.message });
     }
   },
-  getRatingCount: async(req,res)=>{
+  getRatingCount: async (req, res) => {
     try {
       // Count the number of users for each rank number
       const rankNumberData = await avis.aggregate([
@@ -217,7 +217,7 @@ const userCtrl = {
           $sort: { "_id": 1 } // Sort by rank number
         }
       ]);
-  
+
       // Create an array to hold the data for each rank number
       const rankNumberStats = Array.from({ length: 5 }, (_, i) => {
         const rankNumber = i + 1; // Rank numbers are from 1 to 5
@@ -227,110 +227,109 @@ const userCtrl = {
           numberOfUsers: rankNumberInfo ? rankNumberInfo.numberOfUsers : 0 // If no data found for the rank number, set users to 0
         };
       });
-  
+
       res.json(rankNumberStats);
     } catch (error) {
       res.status(500).json({ message: "Error retrieving user rank number data", error: error.message });
     }
   },
-  getTicketsByDayInWeek : async (req, res) => {
+  getTicketsByDayInWeek: async (req, res) => {
     try {
       const currentDate = new Date(); // Get the current date
       const currentWeekStart = currentDate.getDate() - currentDate.getDay(); // Get the start date of the current week (Sunday)
       const currentWeekEnd = currentWeekStart + 7; // Get the end date of the current week
 
       const days = Array.from({ length: 7 }, (_, i) => {
-          return { day: i }; // Generate an array of objects representing each day of the week
+        return { day: i }; // Generate an array of objects representing each day of the week
       });
 
       const ticketData = await tickets.aggregate([
-          {
-              $match: {
-                  dateReservation: { $gte: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentWeekStart), $lt: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentWeekEnd) } // Filter documents for the current week
-              }
-          },
-          {
-              $group: {
-                  _id: { $dayOfWeek: "$dateReservation" }, // Group by day of the week of the 'dateReservation' field
-                  numberOfTickets: { $sum: 1 }    // Count tickets
-              }
+        {
+          $match: {
+            dateReservation: { $gte: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentWeekStart), $lt: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentWeekEnd) } // Filter documents for the current week
           }
+        },
+        {
+          $group: {
+            _id: { $dayOfWeek: "$dateReservation" }, // Group by day of the week of the 'dateReservation' field
+            numberOfTickets: { $sum: 1 }    // Count tickets
+          }
+        }
       ]);
 
       // Left join the aggregated data with the array of days
       const result = days.map(dayObj => {
-          const dayInfo = ticketData.find(item => item._id === dayObj.day);
-          return {
-              day: dayObj.day,
-              dayName: dayNames[dayObj.day], // Get the day name from an array of day names (see below)
-              numberOfTickets: dayInfo ? dayInfo.numberOfTickets : 0
-          };
+        const dayInfo = ticketData.find(item => item._id === dayObj.day);
+        return {
+          day: dayObj.day,
+          dayName: dayNames[dayObj.day], // Get the day name from an array of day names (see below)
+          numberOfTickets: dayInfo ? dayInfo.numberOfTickets : 0
+        };
       });
 
       res.json(result);
-  } catch (error) {
+    } catch (error) {
       res.status(500).json({ message: "Error retrieving ticket data by day in week", error: error.message });
-  }
-},
-getTopReservedTrajets : async (req, res) => {
- 
-  try {
-    const { type } = req.params.id;
+    }
+  },
+  getTopReservedTrajets: async (req, res) => {
 
-    // Aggregate tickets to count reservations for each trajet of the specified type
-    const topTrajets = await tickets.aggregate([
+    try {
+      const { type } = req.params.id;
+
+      const topTrajets = await tickets.aggregate([
         {
-            $lookup: {
-                from: "trajets",
-                localField: "trajet",
-                foreignField: "_id",
-                as: "trajetDetails"
-            }
+          $lookup: {
+            from: "trajets",
+            localField: "trajet",
+            foreignField: "_id",
+            as: "trajetDetails"
+          }
         },
         {
-            $match: {
-                "trajetDetails.Type": req.params.id
-            }
+          $match: {
+            "trajetDetails.Type": req.params.id
+          }
         },
         {
-            $group: {
-                _id: "$trajet", // Group by trajet ObjectId
-                numberOfReservations: { $sum: 1 }
-            }
+          $group: {
+            _id: "$trajet", // Group by trajet ObjectId
+            numberOfReservations: { $sum: 1 }
+          }
         },
         {
-            $sort: { numberOfReservations: -1 }
+          $sort: { numberOfReservations: -1 }
         },
         {
-            $limit: 3
+          $limit: 3
         }
-    ]);
+      ]);
 
-    // Fetch trajet names for the top trajets
-    const topTrajetIds = topTrajets.map(trajet => trajet._id);
-    const trajetDetails = await trajets.find({ _id: { $in: topTrajetIds } });
+      // Fetch trajet names for the top trajets
+      const topTrajetIds = topTrajets.map(trajet => trajet._id);
+      const trajetDetails = await trajets.find({ _id: { $in: topTrajetIds } });
 
-    // Combine trajet names with reservation counts
-    const result = topTrajets.map(trajet => {
+      // Combine trajet names with reservation counts
+      const result = topTrajets.map(trajet => {
         const trajetDetail = trajetDetails.find(item => item._id.equals(trajet._id));
         const trajetName = `${trajetDetail.depart}-${trajetDetail.arrivee}`;
         return {
-            trajet: trajetName,
-            numberOfReservations: trajet.numberOfReservations
+          trajet: trajetName,
+          numberOfReservations: trajet.numberOfReservations
         };
-    });
+      });
 
-    res.json(result);
-} catch (error) {
-    res.status(500).json({ message: "Error retrieving top reserved trajets by type", error: error.message });
-}
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ message: "Error retrieving top reserved trajets by type", error: error.message });
+    }
 
-}
-  
-  
-  
-  
-  
+  }
+
+
+
+
+
 
 }
 const createAccessToken = (user) => {

@@ -5,7 +5,10 @@ const TicketCtrl = {
         try {
             const { trajet, dateReservation } = req.body;
             const user = req.user.id
-            const newTicket = new Ticket({ trajet: trajet, user: user, dateReservation: dateReservation });
+            const Date = new Date(dateReservation);
+            const utcDateReservation = Date.toISOString();
+
+            const newTicket = new Ticket({ trajet: trajet, user: user, dateReservation: utcDateReservation });
             await newTicket.save();
             res.status(201).json(newTicket);
         } catch (error) {

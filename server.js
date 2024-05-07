@@ -5,8 +5,9 @@ const userRoute = require('./routes/userRoute');
 const trajetRoutes = require('./routes/trajetRoute');
 const notificationRoutes = require('./routes/notificationRoute');
 const stationRoutes = require('./routes/stationRoute')
-const ratingavisRoutes = require('./routes/rating-avisRoute')
 const ticketRoutes = require('./routes/ticketRoute')
+const ratingavisRoutes = require('./routes/rating-avisRoute')
+const dashboardRoutes = require('./routes/dashboardRoute')
 
 require('dotenv').config();
 
@@ -33,6 +34,7 @@ app.use('/user', userRoute)
 app.use('/station', stationRoutes);
 app.use('/ratingavis', ratingavisRoutes);
 app.use('/ticket', ticketRoutes);
+app.use('/dashboard', dashboardRoutes);
 
 // Database connection setup (ensure this does what's expected)
 require('./db/cnx');
