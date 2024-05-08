@@ -1,31 +1,55 @@
-const users = require("../models/User.model")
-const tickets = require('../models/Ticket.model')
-const avis = require('../models/rating-avis.model')
-const trajets = require('../models/Trajet.model')
-const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
-
+const users = require("../models/User.model");
+const tickets = require("../models/Ticket.model");
+const avis = require("../models/rating-avis.model");
+const trajets = require("../models/Trajet.model");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const monthNames = [
-  "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
-const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const dayNames = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 
 const userCtrl = {
   register: async (req, res) => {
     try {
       const { name, lastName, email, password, photo } = req.body;
-      const user = await users.findOne({ email })
+      const user = await users.findOne({ email });
       if (user)
-        return res.status(400).json({ msg: 'the email already exists.' })
+        return res.status(400).json({ msg: "the email already exists." });
 
       if (password.length < 6)
-        return res.status(400).json({ msg: 'password is at least 6 characters long .' })
+        return res
+          .status(400)
+          .json({ msg: "password is at least 6 characters long ." });
       //password encryption
-      const passwordHash = await bcrypt.hash(password, 10)
+      const passwordHash = await bcrypt.hash(password, 10);
       const newUser = new users({
-        name, lastName, photo, email, password: passwordHash
-      })
+        name,
+        lastName,
+        photo,
+        email,
+        password: passwordHash,
+      });
       await newUser.save();
 
       const accesstoken = createAccessToken({ id: newUser._id });
@@ -36,49 +60,47 @@ const userCtrl = {
     } catch (error) {
       return res.status(500).json({ msg: error.message });
     }
-
   },
   login: async (req, res) => {
     try {
       const { email, password } = req.body;
 
-      const user = await users.findOne({ email })
-      if (!user) return res.status(400).json({ msg: 'user does not exist.' })
+      const user = await users.findOne({ email });
+      if (!user) return res.status(400).json({ msg: "user does not exist." });
       if (user.role !== "user") {
-        return res.status(403).json({ msg: 'inccorect information.' });
+        return res.status(403).json({ msg: "inccorect information." });
       }
-      const isMatch = await bcrypt.compare(password, user.password)
-      if (!isMatch) return res.status(400).json({ msg: 'Incorrect password' })
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) return res.status(400).json({ msg: "Incorrect password" });
 
-      const accesstoken = createAccessToken({ id: user._id })
-      const refreshtoken = createRefreshToken({ id: user._id })
-      res.json({ accesstoken })
-
+      const accesstoken = createAccessToken({ id: user._id });
+      const refreshtoken = createRefreshToken({ id: user._id });
+      res.json({ accesstoken, userId: user._id });
     } catch (error) {
-      return res.status(500).json({ msg: error.message })
+      return res.status(500).json({ msg: error.message });
     }
   },
-
 
   loginAdmin: async (req, res) => {
     try {
       const { email, password } = req.body;
       const user = await users.findOne({ email });
       if (!user) {
-        return res.status(400).json({ msg: 'User does not exist.' });
+        return res.status(400).json({ msg: "User does not exist." });
       }
       if (user.role !== "admin") {
-        return res.status(403).json({ msg: 'Access denied: You are not an administrator.' });
+        return res
+          .status(403)
+          .json({ msg: "Access denied: You are not an administrator." });
       }
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        return res.status(400).json({ msg: 'Incorrect password' });
+        return res.status(400).json({ msg: "Incorrect password" });
       }
 
       const accesstoken = createAccessToken({ id: user._id });
       const refreshtoken = createRefreshToken({ id: user._id });
       res.json({ accesstoken, role: user.role });
-
     } catch (error) {
       return res.status(500).json({ msg: error.message });
     }
@@ -91,7 +113,7 @@ const userCtrl = {
       if (password != "") {
         update.password = await bcrypt.hash(password, 10);
       }
-      console.log(update, password)
+      console.log(update, password);
       await users.findOneAndUpdate({ _id: req.user.id }, update);
       res.json({ msg: "User updated" });
     } catch (error) {
@@ -106,11 +128,12 @@ const userCtrl = {
       if (password) {
         passhash = await bcrypt.hash(password, 10);
       }
-      await users.findOneAndUpdate(({ _id: req.user.id }, { name, lastName, email, passhash, photo }))
-      res.json({ msg: "updated user" })
-
+      await users.findOneAndUpdate(
+        ({ _id: req.user.id }, { name, lastName, email, passhash, photo })
+      );
+      res.json({ msg: "updated user" });
     } catch (error) {
-      return res.status(500).json({ message: error.message })
+      return res.status(500).json({ message: error.message });
     }
   },
   deleteUser: async (req, res) => {
@@ -140,9 +163,13 @@ const userCtrl = {
       const user = await users.find();
       const ticket = await tickets.find();
       const aviss = await avis.find();
-      res.json({ users: user.length, tickets: ticket.length, avis: aviss.length })
+      res.json({
+        users: user.length,
+        tickets: ticket.length,
+        avis: aviss.length,
+      });
     } catch (error) {
-      res.status(500).json(error)
+      res.status(500).json(error);
     }
   },
   getUserDataByMonth: async (req, res) => {
@@ -156,30 +183,38 @@ const userCtrl = {
       const userData = await users.aggregate([
         {
           $match: {
-            createdAt: { $gte: new Date(currentYear, 0, 1), $lt: new Date(currentYear + 1, 0, 1) } // Filter documents for the current year
-          }
+            createdAt: {
+              $gte: new Date(currentYear, 0, 1),
+              $lt: new Date(currentYear + 1, 0, 1),
+            }, // Filter documents for the current year
+          },
         },
         {
           $group: {
             _id: { $month: "$createdAt" }, // Group by month of the 'createdAt' field
-            numberOfUsers: { $sum: 1 }    // Count users
-          }
-        }
+            numberOfUsers: { $sum: 1 }, // Count users
+          },
+        },
       ]);
 
       // Left join the aggregated data with the array of months
-      const result = months.map(monthObj => {
-        const monthInfo = userData.find(item => item._id === monthObj.month);
+      const result = months.map((monthObj) => {
+        const monthInfo = userData.find((item) => item._id === monthObj.month);
         return {
           month: monthObj.month,
           monthName: monthNames[monthObj.month - 1], // Get the month name from an array of month names (see below)
-          numberOfUsers: monthInfo ? monthInfo.numberOfUsers : 0
+          numberOfUsers: monthInfo ? monthInfo.numberOfUsers : 0,
         };
       });
 
       res.json(result);
     } catch (error) {
-      res.status(500).json({ message: "Error retrieving user data by month", error: error.message });
+      res
+        .status(500)
+        .json({
+          message: "Error retrieving user data by month",
+          error: error.message,
+        });
     }
   },
   getUserSatisfaction: async (req, res) => {
@@ -189,18 +224,34 @@ const userCtrl = {
         {
           $group: {
             _id: null,
-            satisfiedUsers: { $sum: { $cond: { if: { $gte: ["$number", 3] }, then: 1, else: 0 } } }, // Count users with rating number >= 3 as satisfied
-            dissatisfiedUsers: { $sum: { $cond: { if: { $lt: ["$number", 3] }, then: 1, else: 0 } } } // Count users with rating number < 3 as dissatisfied
-          }
-        }
+            satisfiedUsers: {
+              $sum: {
+                $cond: { if: { $gte: ["$number", 3] }, then: 1, else: 0 },
+              },
+            }, // Count users with rating number >= 3 as satisfied
+            dissatisfiedUsers: {
+              $sum: {
+                $cond: { if: { $lt: ["$number", 3] }, then: 1, else: 0 },
+              },
+            }, // Count users with rating number < 3 as dissatisfied
+          },
+        },
       ]);
 
       // Extract the results from the aggregation output
-      const userSatisfaction = userSatisfactionData[0] || { satisfiedUsers: 0, dissatisfiedUsers: 0 };
+      const userSatisfaction = userSatisfactionData[0] || {
+        satisfiedUsers: 0,
+        dissatisfiedUsers: 0,
+      };
 
       res.json(userSatisfaction);
     } catch (error) {
-      res.status(500).json({ message: "Error retrieving user satisfaction data", error: error.message });
+      res
+        .status(500)
+        .json({
+          message: "Error retrieving user satisfaction data",
+          error: error.message,
+        });
     }
   },
   getRatingCount: async (req, res) => {
@@ -210,27 +261,34 @@ const userCtrl = {
         {
           $group: {
             _id: "$number", // Group by rank number
-            numberOfUsers: { $sum: 1 } // Count users for each rank number
-          }
+            numberOfUsers: { $sum: 1 }, // Count users for each rank number
+          },
         },
         {
-          $sort: { "_id": 1 } // Sort by rank number
-        }
+          $sort: { _id: 1 }, // Sort by rank number
+        },
       ]);
 
       // Create an array to hold the data for each rank number
       const rankNumberStats = Array.from({ length: 5 }, (_, i) => {
         const rankNumber = i + 1; // Rank numbers are from 1 to 5
-        const rankNumberInfo = rankNumberData.find(item => item._id === rankNumber); // Find the data for the current rank number
+        const rankNumberInfo = rankNumberData.find(
+          (item) => item._id === rankNumber
+        ); // Find the data for the current rank number
         return {
           rankNumber: rankNumber,
-          numberOfUsers: rankNumberInfo ? rankNumberInfo.numberOfUsers : 0 // If no data found for the rank number, set users to 0
+          numberOfUsers: rankNumberInfo ? rankNumberInfo.numberOfUsers : 0, // If no data found for the rank number, set users to 0
         };
       });
 
       res.json(rankNumberStats);
     } catch (error) {
-      res.status(500).json({ message: "Error retrieving user rank number data", error: error.message });
+      res
+        .status(500)
+        .json({
+          message: "Error retrieving user rank number data",
+          error: error.message,
+        });
     }
   },
   getTicketsByDayInWeek: async (req, res) => {
@@ -246,34 +304,49 @@ const userCtrl = {
       const ticketData = await tickets.aggregate([
         {
           $match: {
-            dateReservation: { $gte: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentWeekStart), $lt: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentWeekEnd) } // Filter documents for the current week
-          }
+            dateReservation: {
+              $gte: new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth(),
+                currentWeekStart
+              ),
+              $lt: new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth(),
+                currentWeekEnd
+              ),
+            }, // Filter documents for the current week
+          },
         },
         {
           $group: {
             _id: { $dayOfWeek: "$dateReservation" }, // Group by day of the week of the 'dateReservation' field
-            numberOfTickets: { $sum: 1 }    // Count tickets
-          }
-        }
+            numberOfTickets: { $sum: 1 }, // Count tickets
+          },
+        },
       ]);
 
       // Left join the aggregated data with the array of days
-      const result = days.map(dayObj => {
-        const dayInfo = ticketData.find(item => item._id === dayObj.day);
+      const result = days.map((dayObj) => {
+        const dayInfo = ticketData.find((item) => item._id === dayObj.day);
         return {
           day: dayObj.day,
           dayName: dayNames[dayObj.day], // Get the day name from an array of day names (see below)
-          numberOfTickets: dayInfo ? dayInfo.numberOfTickets : 0
+          numberOfTickets: dayInfo ? dayInfo.numberOfTickets : 0,
         };
       });
 
       res.json(result);
     } catch (error) {
-      res.status(500).json({ message: "Error retrieving ticket data by day in week", error: error.message });
+      res
+        .status(500)
+        .json({
+          message: "Error retrieving ticket data by day in week",
+          error: error.message,
+        });
     }
   },
   getTopReservedTrajets: async (req, res) => {
-
     try {
       const { type } = req.params.id;
 
@@ -283,61 +356,60 @@ const userCtrl = {
             from: "trajets",
             localField: "trajet",
             foreignField: "_id",
-            as: "trajetDetails"
-          }
+            as: "trajetDetails",
+          },
         },
         {
           $match: {
-            "trajetDetails.Type": req.params.id
-          }
+            "trajetDetails.Type": req.params.id,
+          },
         },
         {
           $group: {
             _id: "$trajet", // Group by trajet ObjectId
-            numberOfReservations: { $sum: 1 }
-          }
+            numberOfReservations: { $sum: 1 },
+          },
         },
         {
-          $sort: { numberOfReservations: -1 }
+          $sort: { numberOfReservations: -1 },
         },
         {
-          $limit: 3
-        }
+          $limit: 3,
+        },
       ]);
 
       // Fetch trajet names for the top trajets
-      const topTrajetIds = topTrajets.map(trajet => trajet._id);
+      const topTrajetIds = topTrajets.map((trajet) => trajet._id);
       const trajetDetails = await trajets.find({ _id: { $in: topTrajetIds } });
 
       // Combine trajet names with reservation counts
-      const result = topTrajets.map(trajet => {
-        const trajetDetail = trajetDetails.find(item => item._id.equals(trajet._id));
+      const result = topTrajets.map((trajet) => {
+        const trajetDetail = trajetDetails.find((item) =>
+          item._id.equals(trajet._id)
+        );
         const trajetName = `${trajetDetail.depart}-${trajetDetail.arrivee}`;
         return {
           trajet: trajetName,
-          numberOfReservations: trajet.numberOfReservations
+          numberOfReservations: trajet.numberOfReservations,
         };
       });
 
       res.json(result);
     } catch (error) {
-      res.status(500).json({ message: "Error retrieving top reserved trajets by type", error: error.message });
+      res
+        .status(500)
+        .json({
+          message: "Error retrieving top reserved trajets by type",
+          error: error.message,
+        });
     }
-
-  }
-
-
-
-
-
-
-}
+  },
+};
 const createAccessToken = (user) => {
-  return jwt.sign(user, "metrobus123", { expiresIn: '365d' })
-}
+  return jwt.sign(user, "metrobus123", { expiresIn: "365d" });
+};
 const createRefreshToken = (user) => {
-  return jwt.sign(user, "metrobus123", { expiresIn: '365d' })
-}
+  return jwt.sign(user, "metrobus123", { expiresIn: "365d" });
+};
 
-
-module.exports = userCtrl
+module.exports = userCtrl;
