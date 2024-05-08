@@ -4,6 +4,7 @@ const avis = require('../models/rating-avis.model')
 const trajets = require('../models/Trajet.model')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const mongoose = require('mongoose');
 
 
 const monthNames = [
@@ -42,23 +43,21 @@ const userCtrl = {
     try {
       const { email, password } = req.body;
 
-      const user = await users.findOne({ email })
-      if (!user) return res.status(400).json({ msg: 'user does not exist.' })
+      const user = await users.findOne({ email });
+      if (!user) return res.status(400).json({ msg: "user does not exist." });
       if (user.role !== "user") {
-        return res.status(403).json({ msg: 'inccorect information.' });
+        return res.status(403).json({ msg: "inccorect information." });
       }
-      const isMatch = await bcrypt.compare(password, user.password)
-      if (!isMatch) return res.status(400).json({ msg: 'Incorrect password' })
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) return res.status(400).json({ msg: "Incorrect password" });
 
-      const accesstoken = createAccessToken({ id: user._id })
-      const refreshtoken = createRefreshToken({ id: user._id })
-      res.json({ accesstoken })
-
+      const accesstoken = createAccessToken({ id: user._id });
+      const refreshtoken = createRefreshToken({ id: user._id });
+      res.json({ accesstoken, userId: user._id });
     } catch (error) {
-      return res.status(500).json({ msg: error.message })
+      return res.status(500).json({ msg: error.message });
     }
   },
-
 
   loginAdmin: async (req, res) => {
     try {
@@ -133,6 +132,23 @@ const userCtrl = {
       res.json(allUsers);
     } catch (error) {
       return res.status(500).json({ message: error.message });
+    }
+  },
+  getUserById: async (req, res) => {
+    const { userId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).send('Invalid user ID format');
+    }
+
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).send('User not found');
+      }
+      res.send(user);
+    } catch (error) {
+      console.error('Server Error:', error);
+      res.status(500).send('Internal Server Error');
     }
   },
   getStatCards: async (req, res) => {

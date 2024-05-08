@@ -8,7 +8,7 @@ router.post('/loginAdmin', userCtrl.loginAdmin)
 
 router.put('/updateUser', auth, userCtrl.UpdateUser)
 router.put('/updateAdmin', auth, authAdmin, userCtrl.UpdateAdmin)
-
+router.get('/user/:userId', userCtrl.getUserById);
 router.delete('/deleteuser/:id', auth, authAdmin, userCtrl.deleteUser);
 router.get('/getAllUsers', auth, authAdmin, userCtrl.getAll);
 router.get('/getStatsCards', userCtrl.getStatCards)
