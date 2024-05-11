@@ -15,15 +15,15 @@ const TicketCtrl = {
         .json({ message: "Internal Server Error", error: error.message });
     }
   },
-  getAllTickets: async (req, res) => {
+  getUserTickets: async (req, res) => {
     try {
-      const Tickets = await Ticket.find().populate(
-        "trajet",
-        "-_id -createdAt -updatedAt -__v -Type"
-      );
-      res.json(Tickets);
+      console.log(req.user.id)
+      const userId = req.user.id;
+
+      const userTickets = await Ticket.find({ user: userId }).populate("trajet", "-_id -createdAt -updatedAt -__v -Type");
+      res.json(userTickets);
     } catch (error) {
-      res.status(500).send(error.message);
+      res.status(500).json({ message: error.message });
     }
   },
   deleteTicket: async (req, res) => {

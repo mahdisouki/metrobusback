@@ -23,9 +23,9 @@ const corsOptions = {
 app.use(cors(corsOptions));           // Apply CORS with the options
 
 // Middleware to parse body data
-app.use(express.json());
+app.use(express.json({ limit: "500mb" }));
 app.use(express.urlencoded({ extended: true }));
-app.use(bodyParser.json());           // Note: bodyParser.json() is somewhat redundant with express.json()
+app.use(bodyParser.json({ limit: "500mb" }));           // Note: bodyParser.json() is somewhat redundant with express.json()
 
 // Define routes
 app.use('/trajet', trajetRoutes);

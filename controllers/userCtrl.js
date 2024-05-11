@@ -52,7 +52,6 @@ const userCtrl = {
         password: passwordHash,
       });
       await newUser.save();
-
       const accesstoken = createAccessToken({ id: newUser._id });
 
       res.json({ accesstoken });
@@ -76,7 +75,7 @@ const userCtrl = {
 
       const accesstoken = createAccessToken({ id: user._id });
       const refreshtoken = createRefreshToken({ id: user._id });
-      res.json({ accesstoken, userId: user._id });
+      res.json({ accesstoken });
     } catch (error) {
       return res.status(500).json({ msg: error.message });
     }
@@ -123,14 +122,16 @@ const userCtrl = {
   },
 
   UpdateUser: async (req, res) => {
+    console.log(req.user.id)
     try {
-      let passhash = null;
+
       const { name, lastName, email, password, photo } = req.body;
-      if (password) {
-        passhash = await bcrypt.hash(password, 10);
+      let update = { name, lastName, email, photo };
+      if (password !== "") {
+        update.password = await bcrypt.hash(password, 10);
       }
       await users.findOneAndUpdate(
-        ({ _id: req.user.id }, { name, lastName, email, passhash, photo })
+        { _id: req.user.id }, update
       );
       res.json({ msg: "updated user" });
     } catch (error) {
@@ -160,13 +161,10 @@ const userCtrl = {
     }
   },
   getUserById: async (req, res) => {
-    const { userId } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).send('Invalid user ID format');
-    }
-
+    const id = req.user.id
     try {
-      const user = await User.findById(userId);
+      console.log(id)
+      const user = await users.findById(id);
       if (!user) {
         return res.status(404).send('User not found');
       }
