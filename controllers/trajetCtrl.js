@@ -33,19 +33,7 @@ const trajetCtrl = {
     const { depart, arrivee, tempsDepart, tempsArrivee, Type, prix } = req.body;
 
     try {
-      const existingTrajet = await Trajet.findOne({
-        depart,
-        arrivee,
-        tempsDepart,
-        tempsArrivee,
-        Type,
-        prix,
-      });
 
-      if (existingTrajet) {
-        res.status(400).json({ msg: "Ce trajet existe déjà" });
-
-      }
       const updatedTrajet = await Trajet.findByIdAndUpdate(
         id,
         {
@@ -82,6 +70,7 @@ const trajetCtrl = {
       res.status(500).json({ message: error.message });
     }
   },
+
 
   getAllTrajets: async (req, res) => {
     try {

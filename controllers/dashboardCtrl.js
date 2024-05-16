@@ -32,7 +32,7 @@ const dashboardCtrl = {
             const userData = await users.aggregate([
                 {
                     $match: {
-                        createdAt: { $gte: new Date(currentYear, 0, 1), $lt: new Date(currentYear + 1, 0, 1) } // Filter documents for the current year
+                        createdAt: { $gte: new Date(currentYear, 0, 1), $lt: new Date(currentYear + 1, 0, 1) }, role: 'user' // Filter documents for the current year
                     }
                 },
                 {
@@ -154,7 +154,6 @@ const dashboardCtrl = {
         }
     },
     getTopReservedTrajets: async (req, res) => {
-
         try {
             const { type } = req.params.id;
 
@@ -174,7 +173,7 @@ const dashboardCtrl = {
                 },
                 {
                     $group: {
-                        _id: "$trajet", // Group by trajet ObjectId
+                        _id: { depart: "$trajetDetails.depart", arrivee: "$trajetDetails.arrivee" }, // Group by depart and arrivee
                         numberOfReservations: { $sum: 1 }
                     }
                 },
@@ -186,26 +185,22 @@ const dashboardCtrl = {
                 }
             ]);
 
-            // Fetch trajet names for the top trajets
-            const topTrajetIds = topTrajets.map(trajet => trajet._id);
-            const trajetDetails = await trajets.find({ _id: { $in: topTrajetIds } });
-
-            // Combine trajet names with reservation counts
+            // Format the result for response
             const result = topTrajets.map(trajet => {
-                const trajetDetail = trajetDetails.find(item => item._id.equals(trajet._id));
-                const trajetName = `${trajetDetail.depart}-${trajetDetail.arrivee}`;
+                const trajetName = `${trajet._id.depart}-${trajet._id.arrivee}`;
                 return {
                     trajet: trajetName,
                     numberOfReservations: trajet.numberOfReservations
                 };
             });
 
-            res.json(result);
+            res.status(200).json(result);
         } catch (error) {
-            res.status(500).json({ message: "Error retrieving top reserved trajets by type", error: error.message });
+            console.error("Error getting top reserved trajets:", error);
+            res.status(500).json({ message: "Internal server error" });
         }
-
     }
+
 
 }
 
